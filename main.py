@@ -1,14 +1,18 @@
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
+import pdfplumber
 
 app = FastAPI()
 
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+@app.post("/extract-text")
+async def extract_text(file: UploadFile = File(...)):
+    # Abre o arquivo PDF
+    with pdfplumber.open(file.file) as pdf:
+        text = ""
+        # Extrai o texto de cada página
+        for page in pdf.pages:
+            text += page.extract_text()
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Optional[str] = None):
-    return {"item_id": item_id, "q": q}
+    return {"extracted_text": text}
